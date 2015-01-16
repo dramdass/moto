@@ -861,7 +861,11 @@ class AmiBackend(object):
 
     def create_image(self, instance_id, name=None, description=None):
         # TODO: check that instance exists and pull info from it.
-        ami_id = random_ami_id()
+        # XXX (dennis): Hack to create a way for hard-coded AMI ids
+        if name:
+            ami_id = name
+        else:
+            ami_id = random_ami_id()
         instance = self.get_instance(instance_id)
         ami = Ami(self, ami_id, instance=instance, source_ami=None, name=name, description=description)
         self.amis[ami_id] = ami
@@ -996,7 +1000,6 @@ class SecurityGroup(object):
         self.egress_rules = []
         self.enis = {}
         self.vpc_id = vpc_id
-        self.owner_id = "123456789012"
 
     @classmethod
     def create_from_cloudformation_json(cls, resource_name, cloudformation_json, region_name):

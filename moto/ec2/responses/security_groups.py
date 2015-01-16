@@ -35,7 +35,9 @@ def process_rules_from_querystring(querystring):
 
 class SecurityGroups(BaseResponse):
     def authorize_security_group_egress(self):
-        raise NotImplementedError('SecurityGroups.authorize_security_group_egress is not yet implemented')
+        # XXX (dennis): Return a response but do nothing
+        return AUTHORIZE_SECURITY_GROUP_EGRESS_REPONSE
+        #raise NotImplementedError('SecurityGroups.authorize_security_group_egress is not yet implemented')
 
     def authorize_security_group_ingress(self):
         self.ec2_backend.authorize_security_group_ingress(*process_rules_from_querystring(self.querystring))
@@ -142,6 +144,11 @@ AUTHORIZE_SECURITY_GROUP_INGRESS_REPONSE = """<AuthorizeSecurityGroupIngressResp
   <requestId>59dbff89-35bd-4eac-99ed-be587EXAMPLE</requestId>
   <return>true</return>
 </AuthorizeSecurityGroupIngressResponse>"""
+
+AUTHORIZE_SECURITY_GROUP_EGRESS_REPONSE = """<AuthorizeSecurityGroupEgressResponse xmlns="http://ec2.amazonaws.com/doc/2012-12-01/">
+  <requestId>59dbff89-35bd-4eac-99ed-be587EXAMPLE</requestId>
+  <return>true</return>
+</AuthorizeSecurityGroupEgressResponse>"""
 
 REVOKE_SECURITY_GROUP_INGRESS_REPONSE = """<RevokeSecurityGroupIngressResponse xmlns="http://ec2.amazonaws.com/doc/2012-12-01/">
   <requestId>59dbff89-35bd-4eac-99ed-be587EXAMPLE</requestId>

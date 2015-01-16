@@ -28,7 +28,9 @@ class KeyPairs(BaseResponse):
         return template.render(keypairs=keypairs)
 
     def import_key_pair(self):
-        raise NotImplementedError('KeyPairs.import_key_pair is not yet implemented')
+        # XXX (dennis): implement endpoint
+        return self.create_key_pair()
+        #raise NotImplementedError('KeyPairs.import_key_pair is not yet implemented')
 
 
 DESCRIBE_KEY_PAIRS_RESPONSE = """<DescribeKeyPairsResponse xmlns="http://ec2.amazonaws.com/doc/2013-10-15/">
