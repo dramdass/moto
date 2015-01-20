@@ -3,10 +3,14 @@ from moto.core.responses import BaseResponse
 from moto.core.utils import camelcase_to_underscores
 from moto.ec2.utils import instance_ids_from_querystring, filters_from_querystring, \
     dict_from_querystring, optional_from_querystring
+import time
 
 
 class InstanceResponse(BaseResponse):
+
     def describe_instances(self):
+        # XXX (dennis): decorators failed for some reason
+        time.sleep(1)
         filter_dict = filters_from_querystring(self.querystring)
         instance_ids = instance_ids_from_querystring(self.querystring)
         if instance_ids:
@@ -18,6 +22,8 @@ class InstanceResponse(BaseResponse):
         return template.render(reservations=reservations)
 
     def run_instances(self):
+        # XXX (dennis): decorators failed for some reason
+        time.sleep(1)
         min_count = int(self.querystring.get('MinCount', ['1'])[0])
         image_id = self.querystring.get('ImageId')[0]
         user_data = self.querystring.get('UserData')
