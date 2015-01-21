@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 from . import responses
 
 url_bases = [
-    "https://route53.amazonaws.com/201.-..-../hostedzone",
+    "https?://route53.amazonaws.com/201.-..-../hostedzone",
 ]
 
 url_paths = {
