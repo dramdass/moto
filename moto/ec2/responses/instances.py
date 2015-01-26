@@ -3,14 +3,15 @@ from moto.core.responses import BaseResponse
 from moto.core.utils import camelcase_to_underscores
 from moto.ec2.utils import instance_ids_from_querystring, filters_from_querystring, \
     dict_from_querystring, optional_from_querystring
+import random
 import time
 
 
 class InstanceResponse(BaseResponse):
 
     def describe_instances(self):
-        # XXX (dennis): decorators failed for some reason
-        time.sleep(1)
+        delay_time = random.randrange(6,14) * 0.1
+        time.sleep(delay_time)
         filter_dict = filters_from_querystring(self.querystring)
         instance_ids = instance_ids_from_querystring(self.querystring)
         if instance_ids:
@@ -22,8 +23,8 @@ class InstanceResponse(BaseResponse):
         return template.render(reservations=reservations)
 
     def run_instances(self):
-        # XXX (dennis): decorators failed for some reason
-        time.sleep(1)
+        delay_time = random.randrange(6,14) * 0.1
+        time.sleep(delay_time)
         min_count = int(self.querystring.get('MinCount', ['1'])[0])
         image_id = self.querystring.get('ImageId')[0]
         user_data = self.querystring.get('UserData')
@@ -321,8 +322,8 @@ EC2_DESCRIBE_INSTANCES = """<DescribeInstancesResponse xmlns='http://ec2.amazona
                     <instanceId>{{ instance.id }}</instanceId>
                     <imageId>{{ instance.image_id }}</imageId>
                     <instanceState>
-                      <code>{{ instance._state.code }}</code>
-                      <name>{{ instance._state.name }}</name>
+                      <code>{{ instance.current_state[0] }}</code>
+                      <name>{{ instance.current_state[1] }}</name>
                     </instanceState>
                     <privateDnsName>ip-10.0.0.12.ec2.internal</privateDnsName>
                     <dnsName>ec2-46.51.219.63.compute-1.amazonaws.com</dnsName>
@@ -547,10 +548,10 @@ EC2_INSTANCE_STATUS = """<?xml version="1.0" encoding="UTF-8"?>
             <instanceId>{{ instance.id }}</instanceId>
             <availabilityZone>us-east-1d</availabilityZone>
             <instanceState>
-                <code>{{ instance.state_code }}</code>
-                <name>{{ instance.state }}</name>
+                <code>{{ instance.current_state[0] }}</code>
+                <name>{{ instance.current_state[1] }}</name>
             </instanceState>
-            {% if instance.state_code == 16 %}
+            {% if instance.current_state[0] == 16 %}
               <systemStatus>
                   <status>ok</status>
                   <details>

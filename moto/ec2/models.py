@@ -4,6 +4,7 @@ from collections import defaultdict
 import copy
 from datetime import datetime
 import itertools
+import random
 import re
 
 import boto
@@ -289,7 +290,9 @@ class Instance(BotoInstance, TaggedEC2Resource):
         self.ec2_backend = ec2_backend
         self.id = random_instance_id()
         self.image_id = image_id
-        self._state = InstanceState("running", 16)
+        self._real_launch_time = datetime.utcnow()
+        self._state_delay = random.randrange(120, 240)
+        self._state = InstanceState("pending", 0)
         self._reason = ""
         self._state_reason = StateReason()
         self.user_data = user_data
@@ -328,6 +331,19 @@ class Instance(BotoInstance, TaggedEC2Resource):
                        private_ip=kwargs.get("private_ip"),
                        associate_public_ip=kwargs.get("associate_public_ip"))
 
+    @property
+    def current_state(self):
+        if self._state.name == "pending":
+            now = datetime.utcnow()
+            if (now - self._real_launch_time).seconds > self._state_delay:
+            	self._state.name = "running"
+        	self._state.code = 16
+
+        	self._reason = ""
+        	self._state_reason = StateReason()
+        # TODO (dennis): Add state machine for other states
+        return (self._state.code, self._state.name)
+
     @classmethod
     def create_from_cloudformation_json(cls, resource_name, cloudformation_json, region_name):
         properties = cloudformation_json['Properties']
@@ -355,6 +371,7 @@ class Instance(BotoInstance, TaggedEC2Resource):
         for nic in self.nics.values():
             nic.start()
 
+        # TODO (dennis): Add state machine here
         self._state.name = "running"
         self._state.code = 16
 
@@ -365,6 +382,7 @@ class Instance(BotoInstance, TaggedEC2Resource):
         for nic in self.nics.values():
             nic.stop()
 
+        # TODO (dennis): Add state machine here
         self._state.name = "stopped"
         self._state.code = 80
 
@@ -376,6 +394,7 @@ class Instance(BotoInstance, TaggedEC2Resource):
         for nic in self.nics.values():
             nic.stop()
 
+        # TODO (dennis): Add state machine here
         self._state.name = "terminated"
         self._state.code = 48
 
