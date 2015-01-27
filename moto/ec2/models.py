@@ -331,8 +331,6 @@ class Instance(BotoInstance, TaggedEC2Resource):
                        private_ip=kwargs.get("private_ip"),
                        associate_public_ip=kwargs.get("associate_public_ip"))
 
-<<<<<<< HEAD
-=======
     @property
     def current_state(self):
         if self._state.name == "pending":
@@ -346,7 +344,6 @@ class Instance(BotoInstance, TaggedEC2Resource):
         # TODO (dennis): Add state machine for other states
         return (self._state.code, self._state.name)
 
->>>>>>> aae4fbc
     @classmethod
     def create_from_cloudformation_json(cls, resource_name, cloudformation_json, region_name):
         properties = cloudformation_json['Properties']
