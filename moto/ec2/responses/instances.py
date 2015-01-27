@@ -321,8 +321,8 @@ EC2_DESCRIBE_INSTANCES = """<DescribeInstancesResponse xmlns='http://ec2.amazona
                     <instanceId>{{ instance.id }}</instanceId>
                     <imageId>{{ instance.image_id }}</imageId>
                     <instanceState>
-                      <code>{{ instance._state.code }}</code>
-                      <name>{{ instance._state.name }}</name>
+                      <code>{{ instance.current_state[0] }}</code>
+                      <name>{{ instance.current_state[1] }}</name>
                     </instanceState>
                     <privateDnsName>ip-10.0.0.12.ec2.internal</privateDnsName>
                     <dnsName>ec2-46.51.219.63.compute-1.amazonaws.com</dnsName>
@@ -547,10 +547,10 @@ EC2_INSTANCE_STATUS = """<?xml version="1.0" encoding="UTF-8"?>
             <instanceId>{{ instance.id }}</instanceId>
             <availabilityZone>us-east-1d</availabilityZone>
             <instanceState>
-                <code>{{ instance.state_code }}</code>
-                <name>{{ instance.state }}</name>
+                <code>{{ instance.current_state[0] }}</code>
+                <name>{{ instance.current_state[1] }}</name>
             </instanceState>
-            {% if instance.state_code == 16 %}
+            {% if instance.current_state[0] == 16 %}
               <systemStatus>
                   <status>ok</status>
                   <details>
