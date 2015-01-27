@@ -4,6 +4,7 @@ from collections import defaultdict
 import copy
 from datetime import datetime
 import itertools
+import random
 import re
 
 import boto
