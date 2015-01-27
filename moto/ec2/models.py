@@ -290,8 +290,8 @@ class Instance(BotoInstance, TaggedEC2Resource):
         self.ec2_backend = ec2_backend
         self.id = random_instance_id()
         self.image_id = image_id
-        self._real_launch_time = datetime.utcnow()
-        self._state_delay = random.randrange(120, 240)
+        self.launch_time = datetime.utcnow()
+        self._state_delay = random.randrange(10, 20)
         self._state = InstanceState("pending", 0)
         self._reason = ""
         self._state_reason = StateReason()
@@ -335,7 +335,7 @@ class Instance(BotoInstance, TaggedEC2Resource):
     def current_state(self):
         if self._state.name == "pending":
             now = datetime.utcnow()
-            if (now - self._real_launch_time).seconds > self._state_delay:
+            if (now - self.launch_time).seconds > self._state_delay:
             	self._state.name = "running"
         	self._state.code = 16
 
