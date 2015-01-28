@@ -584,7 +584,7 @@ class InstanceBackend(object):
         instances = []
         for reservation in self.all_reservations():
             for instance in reservation.instances:
-                if instance.state_code == 16:
+                if instance.current_state[0] == 16:
                     instances.append(instance)
         return instances
 
