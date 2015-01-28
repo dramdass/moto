@@ -569,6 +569,13 @@ EC2_INSTANCE_STATUS = """<?xml version="1.0" encoding="UTF-8"?>
                       </item>
                   </details>
               </instanceStatus>
+            {% elif instance.current_state[0] == 0 %}
+              <systemStatus>
+                  <status>initializing</status>
+              </systemStatus>
+              <instanceStatus>
+                  <status>initializing</status>
+              </instanceStatus>
             {% else %}
               <systemStatus>
                   <status>not-applicable</status>
