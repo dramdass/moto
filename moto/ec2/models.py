@@ -501,10 +501,11 @@ class InstanceBackend(object):
         super(InstanceBackend, self).__init__()
 
     def get_instance(self, instance_id):
-        for instance in self.all_instances():
-            if instance.id == instance_id:
-                return instance
-        raise InvalidInstanceIdError(instance_id)
+        instance = self.get_instance_by_id(instance_id)
+        if instance:
+            return instance
+        else:
+            raise InvalidInstanceIdError(instance_id)
 
     def add_instances(self, image_id, count, user_data, security_group_names,
                       **kwargs):
@@ -587,22 +588,20 @@ class InstanceBackend(object):
             next_token = None
         return values, next_token
 
-    def all_instances(self):
+    def all_instances(self, next_token=None):
         instances = []
-        reservations, __ = self.all_reservations()
-        for reservation in reservations:
+        for reservation in self.reservations.values():
             for instance in reservation.instances:
                 instances.append(instance)
-        return instances
+        return self._get_values_nexttoken(instances, next_token=next_token)
 
-    def all_running_instances(self):
+    def all_running_instances(self, next_token=None):
         instances = []
-        reservations, __ = self.all_reservations()
-        for reservation in reservations:
+        for reservation in self.reservations.values():
             for instance in reservation.instances:
                 if instance.current_state[0] == 16:
                     instances.append(instance)
-        return instances
+        return self._get_values_nexttoken(instances, next_token=next_token)
 
     def get_multi_instances_by_id(self, instance_ids):
         """
@@ -610,8 +609,7 @@ class InstanceBackend(object):
         :return: A list with instance objects
         """
         result = []
-        reservations, __ = self.all_reservations()
-        for reservation in reservations:
+        for reservation in self.reservations.values():
             for instance in reservation.instances:
                 if instance.id in instance_ids:
                     result.append(instance)
@@ -619,12 +617,10 @@ class InstanceBackend(object):
         # TODO: Trim error message down to specific invalid id.
         if instance_ids and len(instance_ids) > len(result):
             raise InvalidInstanceIdError(instance_ids)
-
         return result
 
     def get_instance_by_id(self, instance_id):
-        reservations, __ = self.all_reservations()
-        for reservation in reservations:
+        for reservation in self.reservations.values():
             for instance in reservation.instances:
                 if instance.id == instance_id:
                     return instance

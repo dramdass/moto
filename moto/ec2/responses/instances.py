@@ -3,13 +3,15 @@ from moto.core.responses import BaseResponse
 from moto.core.utils import camelcase_to_underscores
 from moto.ec2.utils import instance_ids_from_querystring, filters_from_querystring, \
     dict_from_querystring, optional_from_querystring
+import random
 import time
 
 
 class InstanceResponse(BaseResponse):
 
     def describe_instances(self):
-        time.sleep(1)
+        delay = random.randrange(7, 13) * 0.1
+        time.sleep(delay)
         filter_dict = filters_from_querystring(self.querystring)
         instance_ids = instance_ids_from_querystring(self.querystring)
         next_token = self._get_param('NextToken')
@@ -22,7 +24,8 @@ class InstanceResponse(BaseResponse):
         return template.render(reservations=reservations, next_token=next_token)
 
     def run_instances(self):
-        time.sleep(1)
+        delay = random.randrange(7, 13) * 0.1
+        time.sleep(delay)
         min_count = int(self.querystring.get('MinCount', ['1'])[0])
         image_id = self.querystring.get('ImageId', ['ami-test'])[0]
         user_data = self.querystring.get('UserData')
@@ -75,11 +78,12 @@ class InstanceResponse(BaseResponse):
 
         next_token = self._get_param('NextToken')
         if instance_ids:
-            instances = self.ec2_backend.get_multi_instances_by_id(instance_ids)
+            instances = \
+                self.ec2_backend.get_multi_instances_by_id(instance_ids)
         elif include_all_instances:
-            instances = self.ec2_backend.all_instances()
+            instances, next_token = self.ec2_backend.all_instances(next_token=next_token)
         else:
-            instances = self.ec2_backend.all_running_instances()
+            instances, next_token = self.ec2_backend.all_running_instances(next_token=next_token)
 
         template = self.response_template(EC2_INSTANCE_STATUS)
         return template.render(instances=instances, next_token=next_token)

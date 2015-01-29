@@ -3,10 +3,14 @@ from moto.core.responses import BaseResponse
 from moto.ec2.models import validate_resource_ids
 from moto.ec2.utils import sequence_from_querystring, tags_from_query_string, filters_from_querystring
 
+import random
+import time
 
 class TagResponse(BaseResponse):
 
     def create_tags(self):
+        delay = random.randrange(3, 20) * 0.1
+        time.sleep(delay)
         resource_ids = sequence_from_querystring('ResourceId', self.querystring)
         validate_resource_ids(resource_ids)
         self.ec2_backend.do_resources_exist(resource_ids)
