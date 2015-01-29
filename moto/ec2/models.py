@@ -634,7 +634,7 @@ class InstanceBackend(object):
         associated with the given instance_ids.
         """
         reservations = []
-        all_reservations, __ = self.all_reservations(make_copy=True, next_token=next_token)
+        all_reservations, next_token = self.all_reservations(make_copy=True, next_token=next_token)
         for reservation in all_reservations:
             reservation_instance_ids = [instance.id for instance in reservation.instances]
             matching_reservation = any(instance_id in reservation_instance_ids for instance_id in instance_ids)
@@ -649,7 +649,7 @@ class InstanceBackend(object):
             raise InvalidInstanceIdError(invalid_id)
         if filters is not None:
             reservations = filter_reservations(reservations, filters)
-        return reservations
+        return reservations, next_token
 
     def all_reservations(self, make_copy=False, filters=None, next_token=None):
         if make_copy:
