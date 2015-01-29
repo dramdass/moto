@@ -9,23 +9,22 @@ import time
 class InstanceResponse(BaseResponse):
 
     def describe_instances(self):
-        # XXX (dennis): decorators failed for some reason
         time.sleep(1)
         filter_dict = filters_from_querystring(self.querystring)
         instance_ids = instance_ids_from_querystring(self.querystring)
+        next_token = self._get_param('NextToken')
         if instance_ids:
-            reservations = self.ec2_backend.get_reservations_by_instance_ids(instance_ids, filters=filter_dict)
+            reservations, next_token = self.ec2_backend.get_reservations_by_instance_ids(instance_ids, filters=filter_dict, next_token=next_token)
         else:
-            reservations = self.ec2_backend.all_reservations(make_copy=True, filters=filter_dict)
+            reservations, next_token = self.ec2_backend.all_reservations(make_copy=True, filters=filter_dict, next_token=next_token)
 
         template = self.response_template(EC2_DESCRIBE_INSTANCES)
-        return template.render(reservations=reservations)
+        return template.render(reservations=reservations, next_token=next_token)
 
     def run_instances(self):
-        # XXX (dennis): decorators failed for some reason
         time.sleep(1)
         min_count = int(self.querystring.get('MinCount', ['1'])[0])
-        image_id = self.querystring.get('ImageId')[0]
+        image_id = self.querystring.get('ImageId', ['ami-test'])[0]
         user_data = self.querystring.get('UserData')
         security_group_names = self._get_multi_param('SecurityGroup')
         security_group_ids = self._get_multi_param('SecurityGroupId')
@@ -74,6 +73,7 @@ class InstanceResponse(BaseResponse):
         include_all_instances = optional_from_querystring('IncludeAllInstances',
                                                         self.querystring) == 'true'
 
+        next_token = self._get_param('NextToken')
         if instance_ids:
             instances = self.ec2_backend.get_multi_instances_by_id(instance_ids)
         elif include_all_instances:
@@ -82,7 +82,7 @@ class InstanceResponse(BaseResponse):
             instances = self.ec2_backend.all_running_instances()
 
         template = self.response_template(EC2_INSTANCE_STATUS)
-        return template.render(instances=instances)
+        return template.render(instances=instances, next_token=next_token)
 
     def describe_instance_attribute(self):
         # TODO this and modify below should raise IncorrectInstanceState if
@@ -446,6 +446,9 @@ EC2_DESCRIBE_INSTANCES = """<DescribeInstancesResponse xmlns='http://ec2.amazona
           </item>
         {% endfor %}
       </reservationSet>
+      {% if next_token %}
+        <nextToken>{{ next_token }}</nextToken>
+      {% endif %}
 </DescribeInstancesResponse>"""
 
 EC2_TERMINATE_INSTANCES = """
@@ -587,4 +590,7 @@ EC2_INSTANCE_STATUS = """<?xml version="1.0" encoding="UTF-8"?>
         </item>
       {% endfor %}
     </instanceStatusSet>
+    {% if next_token %}
+      <nextToken>{{ next_token }}</nextToken>
+    {% endif %}
 </DescribeInstanceStatusResponse>"""

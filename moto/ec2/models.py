@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 from collections import defaultdict
+from collections import OrderedDict
 import copy
 from datetime import datetime
 import itertools
@@ -94,6 +95,8 @@ from .utils import (
     random_network_acl_subnet_association_id,
     random_vpn_gateway_id)
 
+
+DEFAULT_PAGE_SIZE = 100
 
 def validate_resource_ids(resource_ids):
     for resource_id in resource_ids:
@@ -494,7 +497,7 @@ class Instance(BotoInstance, TaggedEC2Resource):
 class InstanceBackend(object):
 
     def __init__(self):
-        self.reservations = {}
+        self.reservations = OrderedDict()
         super(InstanceBackend, self).__init__()
 
     def get_instance(self, instance_id):
@@ -573,16 +576,29 @@ class InstanceBackend(object):
         value = getattr(instance, key)
         return instance, value
 
+    def _get_values_nexttoken(self, values_list, next_token=None):
+        if not next_token or next_token == 'None':
+            next_token = 0
+        next_token = int(next_token)
+        values = values_list[next_token: next_token + DEFAULT_PAGE_SIZE]
+        if len(values) == DEFAULT_PAGE_SIZE:
+            next_token = next_token + DEFAULT_PAGE_SIZE
+        else:
+            next_token = None
+        return values, next_token
+
     def all_instances(self):
         instances = []
-        for reservation in self.all_reservations():
+        reservations, __ = self.all_reservations()
+        for reservation in reservations:
             for instance in reservation.instances:
                 instances.append(instance)
         return instances
 
     def all_running_instances(self):
         instances = []
-        for reservation in self.all_reservations():
+        reservations, __ = self.all_reservations()
+        for reservation in reservations:
             for instance in reservation.instances:
                 if instance.current_state[0] == 16:
                     instances.append(instance)
@@ -594,8 +610,8 @@ class InstanceBackend(object):
         :return: A list with instance objects
         """
         result = []
-
-        for reservation in self.all_reservations():
+        reservations, __ = self.all_reservations()
+        for reservation in reservations:
             for instance in reservation.instances:
                 if instance.id in instance_ids:
                     result.append(instance)
@@ -607,17 +623,19 @@ class InstanceBackend(object):
         return result
 
     def get_instance_by_id(self, instance_id):
-        for reservation in self.all_reservations():
+        reservations, __ = self.all_reservations()
+        for reservation in reservations:
             for instance in reservation.instances:
                 if instance.id == instance_id:
                     return instance
 
-    def get_reservations_by_instance_ids(self, instance_ids, filters=None):
+    def get_reservations_by_instance_ids(self, instance_ids, filters=None, next_token=None):
         """ Go through all of the reservations and filter to only return those
         associated with the given instance_ids.
         """
         reservations = []
-        for reservation in self.all_reservations(make_copy=True):
+        all_reservations, __ = self.all_reservations(make_copy=True, next_token=next_token)
+        for reservation in all_reservations:
             reservation_instance_ids = [instance.id for instance in reservation.instances]
             matching_reservation = any(instance_id in reservation_instance_ids for instance_id in instance_ids)
             if matching_reservation:
@@ -633,7 +651,7 @@ class InstanceBackend(object):
             reservations = filter_reservations(reservations, filters)
         return reservations
 
-    def all_reservations(self, make_copy=False, filters=None):
+    def all_reservations(self, make_copy=False, filters=None, next_token=None):
         if make_copy:
             # Return copies so that other functions can modify them with changing
             # the originals
@@ -642,7 +660,7 @@ class InstanceBackend(object):
             reservations = [reservation for reservation in self.reservations.values()]
         if filters is not None:
             reservations = filter_reservations(reservations, filters)
-        return reservations
+        return self._get_values_nexttoken(reservations, next_token)
 
 
 class KeyPairBackend(object):
