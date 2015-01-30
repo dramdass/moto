@@ -18,7 +18,7 @@ class InstanceResponse(BaseResponse):
         if instance_ids:
             reservations, next_token = self.ec2_backend.get_reservations_by_instance_ids(instance_ids, filters=filter_dict, next_token=next_token)
         else:
-            reservations, next_token = self.ec2_backend.all_reservations(make_copy=True, filters=filter_dict, next_token=next_token)
+            reservations, next_token = self.ec2_backend.all_reservations(make_copy=False, filters=filter_dict, next_token=next_token)
 
         template = self.response_template(EC2_DESCRIBE_INSTANCES)
         return template.render(reservations=reservations, next_token=next_token)
